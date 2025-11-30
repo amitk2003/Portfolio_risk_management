@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
 # --- Streamlit Page Settings ---
 st.set_page_config(
@@ -15,26 +16,30 @@ st.sidebar.title("Portfolio Optimization Tool")
 
 uploaded_file = st.sidebar.file_uploader("Upload CSV File", type=["csv"])
 
-# Default dataset
-DEFAULT_DATASET = "all_stocks_5yr.csv"
+# ---- Safe dataset path handling (important for deployment) ----
+current_dir = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_DATASET = os.path.join(current_dir, "all_stocks_5yr.csv")
 
 st.sidebar.markdown("---")
 st.sidebar.write("If you don't upload a file, the default dataset will be used.")
 
-# Load dataset
+# ---- Load dataset safely ----
 if uploaded_file:
     df = pd.read_csv(uploaded_file)
     st.sidebar.success("Using uploaded dataset.")
-else:
+elif os.path.exists(DEFAULT_DATASET):
     df = pd.read_csv(DEFAULT_DATASET)
     st.sidebar.info("Using default dataset.")
+else:
+    st.error("⚠ Default dataset not found on server. Please upload a CSV file to continue.")
+    st.stop()
 
 # --- Main Title ---
 st.title("Portfolio Risk Management & Optimization Dashboard")
 
 # --- Dataset Preview ---
 st.subheader("Dataset Overview")
-st.write("The table below displays the first rows of the selected dataset.")
+st.write("The table below displays the first rows of the dataset:")
 st.dataframe(df.head())
 
 # --- Data Preparation ---
@@ -117,4 +122,4 @@ fig2, ax2 = plt.subplots(figsize=(12, 6))
 sns.heatmap(returns.corr(), cmap="coolwarm", center=0, annot=False, ax=ax2)
 st.pyplot(fig2)
 
-st.success("Analysis successfully completed.")
+st.success("Analysis completed.")
